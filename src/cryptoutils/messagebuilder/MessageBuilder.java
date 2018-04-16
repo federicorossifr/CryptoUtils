@@ -1,9 +1,9 @@
-package messagebuilder;
+package cryptoutils.messagebuilder;
 
 import java.nio.ByteBuffer;
 import java.security.*;
 import java.util.Arrays;
-import hashutils.HashManager;
+import cryptoutils.hashutils.HashManager;
 
 public class MessageBuilder {
     public static byte[] concatBytes(byte[] a,byte[] b) {

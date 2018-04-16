@@ -1,4 +1,4 @@
-package cipherutils;
+package cryptoutils.cipherutils;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -13,7 +13,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import messagebuilder.MessageBuilder;
+import cryptoutils.messagebuilder.MessageBuilder;
 
 public class CryptoManager {
     

@@ -1,4 +1,4 @@
-package hashutils;
+package cryptoutils.hashutils;
 
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
