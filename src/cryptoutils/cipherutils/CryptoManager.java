@@ -14,6 +14,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import cryptoutils.messagebuilder.MessageBuilder;
+import java.security.Key;
 
 public class CryptoManager {
     
@@ -44,4 +45,16 @@ public class CryptoManager {
         cipher.init(Cipher.DECRYPT_MODE,computeKey(key,"AES"),new IvParameterSpec(ivBytes));
         return cipher.doFinal(cipherTextNoIV);
     } 
+    
+    public static byte[] encryptRSA(byte[] data,Key key) throws NoSuchAlgorithmException, NoSuchPaddingException, NoSuchPaddingException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return cipher.doFinal(data);
+    }
+    
+    public static byte[] decryptRSA(byte[] cipherText,Key key) throws NoSuchAlgorithmException, NoSuchPaddingException, NoSuchPaddingException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        return cipher.doFinal(cipherText);
+    }    
 }
