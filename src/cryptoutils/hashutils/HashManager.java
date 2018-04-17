@@ -30,7 +30,6 @@ public class HashManager {
     }
     
     public static boolean compareMAC(byte[] data,byte[] mac,String key,String alg) throws InvalidKeyException, NoSuchAlgorithmException {
-        System.out.println("NEW");
         byte[] computedMac = doMAC(data,key,alg);
         byte[] computedMacMAC = doMAC(computedMac,key,alg);
         byte[] macMAC = doMAC(mac,key,alg);
