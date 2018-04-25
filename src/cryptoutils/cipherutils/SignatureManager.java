@@ -6,6 +6,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.cert.Certificate;
 
 public class SignatureManager {
     public static byte[] sign(byte[] data,String alg,PrivateKey key) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
@@ -16,9 +17,26 @@ public class SignatureManager {
     }
     
     public static boolean verify(byte[] data,byte[] sign,String alg,PublicKey key) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        Signature sig = Signature.getInstance(alg);
-        sig.initVerify(key);
-        sig.update(data);
-        return sig.verify(sign);
+        try {
+            Signature sig = Signature.getInstance(alg);
+            sig.initVerify(key);
+            sig.update(data);
+            boolean res = sig.verify(sign);
+            return res;
+        } catch(Exception e) {
+            return false;
+        }
+    }
+    
+    public static boolean verify(byte[] data,byte[] sign,String alg,Certificate cert) throws SignatureException, NoSuchAlgorithmException {
+        try {
+            Signature sig = Signature.getInstance(alg);
+            sig.initVerify(cert);
+            sig.update(data);
+            boolean res = sig.verify(sign);
+            return res;
+        } catch(Exception e) {
+            return false;
+        }
     }
 }
