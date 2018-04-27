@@ -2,10 +2,8 @@
 package cryptoutils.communication;
 
 import cryptoutils.cipherutils.CertificateManager;
-import cryptoutils.communication.TrustedPartyInterface;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
@@ -14,7 +12,7 @@ import java.rmi.RemoteException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
-import openssl.OpenSSLCliBindings;
+import cryptoutils.openssl.OpenSSLCliBindings;
 
 public class TrustedPartyRMIServer implements TrustedPartyInterface{
     private Map<String,Certificate> certStore;
