@@ -24,5 +24,14 @@ public class CertificateManager {
             return false;
         }
     }
+    public static boolean verifyCertificate(X509Certificate toVerify,Certificate trustedAuthority) {
+        try {
+            boolean validity = verifyCertificate((Certificate)toVerify, trustedAuthority);
+            toVerify.checkValidity();
+            return validity;
+        } catch(Exception e) {
+            return false;
+        }
+    }
             
 }

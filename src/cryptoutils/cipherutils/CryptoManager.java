@@ -1,33 +1,22 @@
 package cryptoutils.cipherutils;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
+import java.nio.*;
+import java.security.*;
+import javax.crypto.*;
+import javax.crypto.spec.*;
 import cryptoutils.messagebuilder.MessageBuilder;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.*;
 import java.nio.file.Paths;
-import java.security.Key;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.*;
 import java.util.Base64;
 
 public class CryptoManager {
-    
-    private static IvParameterSpec computeIV(int iv) throws NoSuchAlgorithmException { //HERE WE SHOULD NEED MORE BYTES
+    private static final String PKCS8_HEADER = "-----BEGIN PRIVATE KEY-----";
+    private static final String PKCS8_TRAILER= "-----END PRIVATE KEY-----";
+    private static final String NEW_LINE = System.getProperty("line.separator");
+    private static IvParameterSpec computeIV(int iv) throws NoSuchAlgorithmException { 
         byte[] ivBytes = ByteBuffer.allocate(4).putInt(iv).array();    
         byte[] ivDigest = MessageDigest.getInstance("SHA-256").digest(ivBytes);
         return new IvParameterSpec(MessageBuilder.extractFirstBytes(ivDigest, 16));
@@ -70,9 +59,9 @@ public class CryptoManager {
     public static PrivateKey readRSAPrivateKeyFromPEMFile(String filename) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         byte[] privateKey = Files.readAllBytes(Paths.get(filename));
         String privateKeyString = new String(privateKey);
-        String privPEM=privateKeyString.replace("-----BEGIN PRIVATE KEY-----", "");
-        privPEM=privPEM.replace("-----END PRIVATE KEY-----","");
-        privPEM=privPEM.replaceAll(System.getProperty("line.separator"), "");
+        String privPEM=privateKeyString.replace(PKCS8_HEADER, "");
+        privPEM=privPEM.replace(PKCS8_TRAILER,"");
+        privPEM=privPEM.replaceAll(NEW_LINE, "");
         KeyFactory kf = KeyFactory.getInstance("RSA");
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privPEM));
         PrivateKey pk = kf.generatePrivate(keySpec);
