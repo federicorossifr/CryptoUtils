@@ -16,9 +16,10 @@ public class HashManager {
     public static String toHexString(byte[] bytes) {
             Formatter formatter = new Formatter();
             for (byte b : bytes) {
-                    formatter.format("%02x", b);
+                    formatter.format("%02x:", b);
             }
-            return formatter.toString();
+            String tmp = formatter.toString();
+            return tmp.substring(0, tmp.length() - 1);
     }
     
     /**

@@ -54,11 +54,9 @@ public class SignatureManager {
      * @param sign
      * @param alg
      * @param cert  The certificate used to verify the signature
-     * @return
-     * @throws SignatureException
-     * @throws NoSuchAlgorithmException 
+     * @return 
      */
-    public static boolean verify(byte[] data,byte[] sign,String alg,Certificate cert) throws SignatureException, NoSuchAlgorithmException {
+    public static boolean verify(byte[] data,byte[] sign,String alg,Certificate cert) {
         try {
             Signature sig = Signature.getInstance(alg);
             sig.initVerify(cert);

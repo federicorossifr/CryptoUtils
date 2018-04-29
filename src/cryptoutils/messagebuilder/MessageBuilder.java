@@ -4,17 +4,25 @@ import java.nio.ByteBuffer;
 import java.security.*;
 import java.util.Arrays;
 import cryptoutils.hashutils.HashManager;
+import java.time.Instant;
 
 public class MessageBuilder {
     /**
      * Concatenates the two byte[] objects passed as parametres
-     * @param a
-     * @param b
+     * @param arrays variadic arguments containing all the byte[] objects to be concatenated
      * @return the byte[] object representing the concatenation
      */
-    public static byte[] concatBytes(byte[] a,byte[] b) {
-        byte[] result = Arrays.copyOf(a, a.length+b.length);
-        System.arraycopy(b, 0, result, a.length, b.length);        
+    public static byte[] concatBytes(byte[]... arrays) {
+        int totalSize = 0;
+        int currentSize = 0;
+        for(int i = 0; i < arrays.length; ++i) {
+            totalSize+=arrays[i].length;
+        }
+        byte[] result = new byte[totalSize];
+        for(int i = 0; i < arrays.length; ++i) {
+            System.arraycopy(arrays[i], 0, result, currentSize, arrays[i].length);        
+            currentSize+=arrays[i].length;
+        }
         return result;
     }
     
@@ -74,6 +82,10 @@ public class MessageBuilder {
         return Arrays.copyOfRange(msg,msg.length-n , msg.length);
     }    
     
+    
+    public static byte[] extractRangeBytes(byte[] msg,int from,int to) {
+        return Arrays.copyOfRange(msg,from,to);
+    }
     /**
      * Computes the msg hash and concatenate it to the beginning
      * @param msg
@@ -133,6 +145,23 @@ public class MessageBuilder {
     }
     
     /**
+     * Inserts a timestamp to be used as nonce
+     * @param msg the message to concatenate with timestamp
+     * @return the new timestamped message
+     */
+    public static byte[] insertTimestamp(byte[] msg) {
+        byte[] timestampBytes = toByteArray(Instant.now().toEpochMilli());
+        return concatBytes(msg,timestampBytes);
+    }
+    
+    /**
+     * Exta
+     */
+    public static long getTimestamp(byte[] msg) {
+        byte[] timestampBytes = extractLastBytes(msg, 8);
+        return toLong(timestampBytes);
+    }
+    /**
      * Extracts a nonce integer from position pos
      * @param msg
      * @param pos
@@ -143,6 +172,7 @@ public class MessageBuilder {
         return ByteBuffer.wrap(nonceBytes).getInt();
     }
     
+    
     /**
      * Extracts am integer nonce from the end of msg
      * @param msg
@@ -151,4 +181,6 @@ public class MessageBuilder {
     public static int extractNonce(byte[] msg) {
         return extractNonce(msg,msg.length-4);
     }
+    
+    
 }

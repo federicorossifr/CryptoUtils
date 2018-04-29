@@ -10,19 +10,19 @@ import cryptoutils.hashutils.HashManager;
 import java.security.SecureRandom;
 
 public class SecureEndpoint {
-    private final String encKey;
+    private final byte[] encKey;
     private final String authKey;
     private final String authAlg;
     private int sequenceCounter = 0;
     private int authMACSize;
     
     public SecureEndpoint(String encKey,String authKey,String authAlg) {
-        this.encKey = encKey;
         this.authKey = authKey;
         this.authAlg = authAlg;
+        this.encKey = encKey.getBytes();
         try {
             authMACSize = (Mac.getInstance(authAlg)).getMacLength();
-        } catch (NoSuchAlgorithmException ex) {
+        } catch (Exception ex) {
             System.err.println("[CONSTRUCTOR - "+Thread.currentThread().getName()+"]: "+ex.getMessage());
             System.exit(-1);
         }

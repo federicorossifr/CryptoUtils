@@ -31,15 +31,22 @@ public class CryptoManager {
     }
     
     /**
-     * Transforms a String object representing a secret key in the correspondent
+     * Transforms a byte[] object representing a secret key in the correspondent
      * SecretKeySpec object
      * @param s     the secret key
      * @param alg   the encryption algorithm used
      * @return      the SecretKeySpec object representing the key
      * @throws UnsupportedEncodingException 
      */
-    private static SecretKeySpec computeKey(String s,String alg) throws UnsupportedEncodingException {        
-        return new SecretKeySpec(s.getBytes("UTF-8"),alg);       
+    private static SecretKeySpec computeKey(byte[] s,String alg) throws UnsupportedEncodingException {        
+        return new SecretKeySpec(s,alg);       
+    }
+    
+    public static byte[] generateAES256RandomSecretKey(String alg) {
+        byte[] keyBuf = new byte[16];
+        SecureRandom rng = new SecureRandom();
+            rng.nextBytes(keyBuf);
+        return keyBuf;
     }
     
     /**
@@ -57,7 +64,7 @@ public class CryptoManager {
      * @throws BadPaddingException
      * @throws UnsupportedEncodingException 
      */
-    public static byte[] encryptCBC(byte[] plainText,String key,int iv) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException {
+    public static byte[] encryptCBC(byte[] plainText,byte[] key,int iv) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         IvParameterSpec ivSpec = computeIV(iv);
         byte[] ivBytes = ivSpec.getIV();
@@ -68,7 +75,7 @@ public class CryptoManager {
     }
     
     /**
-     * Decrypts the byte[] object representing the cipherText with the Strign object representing the key
+     * Decrypts the byte[] object representing the cipherText with the byte[] object representing the key
      * @param cipherText    the ciphertext bytes
      * @param key           the string
      * @return              byte[] object representing the plaintext
@@ -80,7 +87,7 @@ public class CryptoManager {
      * @throws BadPaddingException
      * @throws UnsupportedEncodingException 
      */
-    public static byte[] decryptCBC(byte[] cipherText,String key) throws InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException { 
+    public static byte[] decryptCBC(byte[] cipherText,byte[] key) throws InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException { 
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");      
         byte[] ivBytes = MessageBuilder.extractLastBytes(cipherText, 16);
         byte[] cipherTextNoIV = MessageBuilder.extractFirstBytes(cipherText, cipherText.length-16);
