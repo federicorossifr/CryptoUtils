@@ -3,11 +3,9 @@ package cryptoutils.communication;
 import cryptoutils.cipherutils.CertificateManager;
 import cryptoutils.cipherutils.CryptoManager;
 import cryptoutils.cipherutils.SignatureManager;
-import cryptoutils.hashutils.HashManager;
 import cryptoutils.messagebuilder.MessageBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -29,12 +27,11 @@ import javax.crypto.NoSuchPaddingException;
  * SecretKey is the shared secret key (encrypted by means of recipient public key)
  * Challenge nonce is used to prevent reply attacks (encrypted by means of recipient public key)
  * Signature is the digital signature of the request to prevent tampering
- * @author Federico Rossi
  */
 public class Request {
-    private final Certificate certificate;
     private final String issuer;
     private final String recipient;
+    private final Certificate certificate;
     private byte[] secretKey;
     private byte[] challengeNonce = null;
     private byte[] signature = null;
@@ -81,7 +78,6 @@ public class Request {
      */
     public static Request fromEncryptedRequest(byte[] enc,PrivateKey key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, CertificateException {
         Request r = fromEncodedRequest(enc);
-        r.secretKey = CryptoManager.decryptRSA(r.secretKey, key);
         r.challengeNonce = CryptoManager.decryptRSA(r.challengeNonce, key);
         return r;
     }
@@ -186,7 +182,6 @@ public class Request {
     public byte[] getEncrypted(PublicKey recipientPublicKey) throws CertificateEncodingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         if(signature == null || challengeNonce == null) return null;
         secretKey = CryptoManager.encryptRSA(secretKey, recipientPublicKey);
-        challengeNonce = CryptoManager.encryptRSA(challengeNonce, recipientPublicKey);
         byte[] encoded = getEncoded();
         return encoded;
     }
