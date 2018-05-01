@@ -78,7 +78,7 @@ public class Request {
      */
     public static Request fromEncryptedRequest(byte[] enc,PrivateKey key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, CertificateException {
         Request r = fromEncodedRequest(enc);
-        r.challengeNonce = CryptoManager.decryptRSA(r.challengeNonce, key);
+        r.secretKey = CryptoManager.decryptRSA(r.secretKey, key);
         return r;
     }
     

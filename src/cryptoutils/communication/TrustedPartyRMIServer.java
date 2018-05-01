@@ -13,6 +13,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import cryptoutils.openssl.OpenSSLCliBindings;
+import java.rmi.server.RemoteServer;
 
 public class TrustedPartyRMIServer implements TrustedPartyInterface{
     private Map<String,Certificate> certStore;
@@ -20,7 +21,7 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
     private final String authorityKeyFile;
     
     /**
-     * 
+     * p
      * @param authorityCertificateFile the filename of the authority certificate 
      * @param authorityKeyFile the filename of the authority private key
      */
@@ -38,6 +39,11 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
      */
     @Override
     public Certificate getUserCertificate(String user) throws RemoteException {
+        try {
+            System.out.println(RemoteServer.getClientHost());
+        } catch(Exception e) {
+            e.printStackTrace();
+        }     
         Certificate cert = certStore.get(user);
         return cert;
     }
@@ -81,6 +87,7 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
     public Certificate register(byte[] csrContent) throws RemoteException {
         String tmpName = Long.toString((java.lang.System.currentTimeMillis()));
         try {
+            System.out.println(RemoteServer.getClientHost());
             Files.write(Paths.get(tmpName), csrContent);
             boolean result = OpenSSLCliBindings.signRequest(tmpName, authorityCertificateFile, authorityKeyFile, tmpName);
             if(!result) return null;
@@ -92,12 +99,13 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
             Certificate curr = certStore.putIfAbsent(commonName, c);
             backupMap();
             Files.deleteIfExists(Paths.get(tmpName));
+            Files.deleteIfExists(Paths.get(tmpName+OpenSSLCliBindings.DEF_CERT_EXTENSION));
             if(curr == null)
                 return c;
             else {
                 System.out.println("Certificate for "+commonName+"already exists...");
                 Files.deleteIfExists(Paths.get(tmpName+OpenSSLCliBindings.DEF_CERT_EXTENSION));
-                return curr;
+                return null;
             }
         } catch(Exception e) {
             e.printStackTrace();

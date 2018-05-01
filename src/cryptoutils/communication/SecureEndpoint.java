@@ -3,7 +3,6 @@ package cryptoutils.communication;
 import cryptoutils.cipherutils.CryptoManager;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.security.NoSuchAlgorithmException;
 import javax.crypto.Mac;
 import cryptoutils.messagebuilder.MessageBuilder;
 import cryptoutils.hashutils.HashManager;
