@@ -40,7 +40,7 @@ public class SecureEndpoint {
                 if(read != len) throw new Exception("Expected: "+len+ " received: "+read);
                 byte[] decryptedMessage = CryptoManager.decryptCBC(buffer, encKey);
                 byte[] messageHash = MessageBuilder.extractHash(decryptedMessage, AUTH_MAC_SIZE);  
-                Instant timeStamp = MessageBuilder.getTimestamp(buffer);
+                Instant timeStamp = MessageBuilder.getTimestamp(decryptedMessage,decryptedMessage.length-AUTH_MAC_SIZE-8);
                 byte[] timestampedMessage = MessageBuilder.extractFirstBytes(decryptedMessage, decryptedMessage.length-AUTH_MAC_SIZE);
                 byte[] plainText = MessageBuilder.extractFirstBytes(timestampedMessage,timestampedMessage.length-8);
                 boolean verified = (HashManager.compareMAC(timestampedMessage, messageHash, authKey, AUTH_ALG) && verifyTimestamp(timeStamp));    
@@ -56,6 +56,7 @@ public class SecureEndpoint {
         }        
     }
     private static boolean verifyTimestamp(Instant timeStamp){
-        return !(timeStamp.isAfter(timeStamp.plusMillis(TIME_TH))||timeStamp.isBefore(timeStamp.minusMillis(TIME_TH)));    
+        Instant now = Instant.now();
+        return !(timeStamp.isAfter(now.plusMillis(TIME_TH))||timeStamp.isBefore(now.minusMillis(TIME_TH)));    
     }
 }
