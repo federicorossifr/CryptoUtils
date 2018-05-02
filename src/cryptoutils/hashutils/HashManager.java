@@ -43,8 +43,8 @@ public class HashManager {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException 
      */
-    public static byte[] doMAC(byte[] bytes,String key,String alg) throws NoSuchAlgorithmException, InvalidKeyException {
-        SecretKeySpec signKey = new SecretKeySpec(key.getBytes(),alg);
+    public static byte[] doMAC(byte[] bytes,byte[] key,String alg) throws NoSuchAlgorithmException, InvalidKeyException {
+        SecretKeySpec signKey = new SecretKeySpec(key,alg);
         Mac m = Mac.getInstance(alg);
         m.init(signKey);
         return m.doFinal(bytes);
@@ -61,7 +61,7 @@ public class HashManager {
      * @throws InvalidKeyException
      * @throws NoSuchAlgorithmException 
      */
-    public static boolean compareMAC(byte[] data,byte[] mac,String key,String alg) throws InvalidKeyException, NoSuchAlgorithmException {
+    public static boolean compareMAC(byte[] data,byte[] mac, byte[] key,String alg) throws InvalidKeyException, NoSuchAlgorithmException {
         byte[] computedMac = doMAC(data,key,alg);
         byte[] computedMacMAC = doMAC(computedMac,key,alg);
         byte[] macMAC = doMAC(mac,key,alg);

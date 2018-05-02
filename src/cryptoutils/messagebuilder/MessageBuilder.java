@@ -107,8 +107,8 @@ public class MessageBuilder {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException 
      */
-    public static byte[] insertMAC(byte[] msg,String macAlg,String key) throws NoSuchAlgorithmException, InvalidKeyException {
-        byte[] mac = HashManager.doMAC(msg, macAlg, key);
+    public static byte[] insertMAC(byte[] msg,String macAlg,byte[] key) throws NoSuchAlgorithmException, InvalidKeyException {
+        byte[] mac = HashManager.doMAC(msg, key, macAlg);
         return concatBytes(msg, mac);
     }
     

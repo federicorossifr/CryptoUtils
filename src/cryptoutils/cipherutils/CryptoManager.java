@@ -42,10 +42,10 @@ public class CryptoManager {
         return new SecretKeySpec(s,alg);       
     }
     
-    public static byte[] generateAES256RandomSecretKey(String alg) {
+    public static byte[] generateAES256RandomSecretKey() {
         byte[] keyBuf = new byte[16];
         SecureRandom rng = new SecureRandom();
-            rng.nextBytes(keyBuf);
+        rng.nextBytes(keyBuf);
         return keyBuf;
     }
     
