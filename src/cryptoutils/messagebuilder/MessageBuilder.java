@@ -157,9 +157,9 @@ public class MessageBuilder {
     /**
      * Exta
      */
-    public static long getTimestamp(byte[] msg) {
+    public static Instant getTimestamp(byte[] msg) {
         byte[] timestampBytes = extractLastBytes(msg, 8);
-        return toLong(timestampBytes);
+        return Instant.ofEpochMilli(toLong(timestampBytes));
     }
     /**
      * Extracts a nonce integer from position pos

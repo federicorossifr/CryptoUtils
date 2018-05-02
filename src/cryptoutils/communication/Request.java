@@ -230,6 +230,14 @@ public class Request {
     }
     
     /**
+     * Gets the issuer public key from the certificate
+     * @return 
+     */
+    public PublicKey getPublicKey(){
+        return certificate.getPublicKey();
+    }
+    
+    /**
      * Gets the subject of the certificate (it must be equals to the issuer)
      * @return 
      */

@@ -7,14 +7,15 @@ import javax.crypto.Mac;
 import cryptoutils.messagebuilder.MessageBuilder;
 import cryptoutils.hashutils.HashManager;
 import java.security.SecureRandom;
+import java.time.Instant;
+import java.util.Random;
 
 public class SecureEndpoint {
-    private final byte[] encKey;
-    private final String authKey;
-    private final String authAlg;
+    private final static String AUTH_ALG = "HmacSHA256";
     private int sequenceCounter = 0;
-    private int authMACSize;
-    
+    private static int AUTH_MAC_SIZE = 256;
+    private static long TIME_TH = 1000;
+    /*
     public SecureEndpoint(String encKey,String authKey,String authAlg) {
         this.authKey = authKey;
         this.authAlg = authAlg;
@@ -26,18 +27,17 @@ public class SecureEndpoint {
             System.exit(-1);
         }
     }
-    
-    protected boolean secureSend(byte[] data,DataInputStream di,DataOutputStream ds) {
+    */
+    public static boolean secureSend(byte[] data,DataInputStream di,DataOutputStream ds,byte[] encKey, String authKey) {
         try{
-            System.out.println("[SEND - "+Thread.currentThread().getName()+"]: RECEIVING NONCE");
-            int nonce = di.readInt();
-            byte[] noncedMessage = MessageBuilder.insertNonce(data, nonce);
-            byte[] hashedMessage = MessageBuilder.insertMAC(noncedMessage,authKey,authAlg);
-            byte[] encryptedMesage = CryptoManager.encryptCBC(hashedMessage, encKey, ++sequenceCounter);
-            System.out.println("[SEND - "+Thread.currentThread().getName()+"]: SENDING SIZE (bytes) "+encryptedMesage.length);            
-            ds.writeInt(encryptedMesage.length);
+            System.out.println("[SECURE SEND - "+Thread.currentThread().getName()+"]");
+            byte[] timestampedMessage = MessageBuilder.insertTimestamp(data);
+            byte[] hashedMessage = MessageBuilder.insertMAC(timestampedMessage,authKey,AUTH_ALG);
+            byte[] encryptedMessage = CryptoManager.encryptCBC(hashedMessage, encKey, new Random().nextInt()); 
+            System.out.println("[SEND - "+Thread.currentThread().getName()+"]: SENDING SIZE (bytes) "+encryptedMessage.length);            
+            ds.writeInt(encryptedMessage.length);
             System.out.println("[SEND - "+Thread.currentThread().getName()+"]: SENDING PAYLOAD");                        
-            ds.write(encryptedMesage);
+            ds.write(encryptedMessage);
             ds.flush();
             return true;
         } catch(Exception e) {
@@ -47,7 +47,7 @@ public class SecureEndpoint {
         }              
     }
     
-    protected byte[] secureReceive(DataInputStream di,DataOutputStream ds) {
+    public static byte[] secureReceive(DataInputStream di,DataOutputStream ds,byte[] encKey, String authKey) {
         try {
             int nonce = (new SecureRandom()).nextInt();
             ds.writeInt(nonce); ds.flush();
@@ -57,11 +57,11 @@ public class SecureEndpoint {
                 long read = di.read(buffer);
                 if(read != len) throw new Exception("Expected: "+len+ " received: "+read);
                 byte[] decryptedMessage = CryptoManager.decryptCBC(buffer, encKey);
-                byte[] messageHash = MessageBuilder.extractHash(decryptedMessage, authMACSize);
-                int messageNonce = MessageBuilder.extractNonce(decryptedMessage, decryptedMessage.length-authMACSize-4);
-                byte[] noncedMessage = MessageBuilder.extractFirstBytes(decryptedMessage, decryptedMessage.length-authMACSize);
-                byte[] plainText = MessageBuilder.extractFirstBytes(noncedMessage,noncedMessage.length-4);
-                boolean verified = (HashManager.compareMAC(noncedMessage, messageHash, authKey, authAlg) && messageNonce == nonce);    
+                byte[] messageHash = MessageBuilder.extractHash(decryptedMessage, AUTH_MAC_SIZE);  
+                Instant timeStamp = MessageBuilder.getTimestamp(buffer);
+                byte[] timestampedMessage = MessageBuilder.extractFirstBytes(decryptedMessage, decryptedMessage.length-AUTH_MAC_SIZE);
+                byte[] plainText = MessageBuilder.extractFirstBytes(timestampedMessage,timestampedMessage.length-8);
+                boolean verified = (HashManager.compareMAC(timestampedMessage, messageHash, authKey, AUTH_ALG) && verifyTimestamp(timeStamp));    
                 return (verified)?plainText:null;
             } else {
                 return null;
@@ -71,5 +71,8 @@ public class SecureEndpoint {
             System.exit(-1);            
             return null;
         }        
+    }
+    private static boolean verifyTimestamp(Instant timeStamp){
+        return !(timeStamp.isAfter(timeStamp.plusMillis(TIME_TH))||timeStamp.isBefore(timeStamp.minusMillis(TIME_TH)));    
     }
 }
