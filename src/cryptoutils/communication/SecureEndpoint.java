@@ -3,18 +3,15 @@ package cryptoutils.communication;
 import cryptoutils.cipherutils.CryptoManager;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import javax.crypto.Mac;
 import cryptoutils.messagebuilder.MessageBuilder;
 import cryptoutils.hashutils.HashManager;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Random;
 
 public class SecureEndpoint {
     private final static String AUTH_ALG = "HmacSHA256";
-    private int sequenceCounter = 0;
-    private static int AUTH_MAC_SIZE = 256/8;
-    private static long TIME_TH = 1000;
+    private static final int AUTH_MAC_SIZE = 256/8;
+    private static final long TIME_TH = 1000;
     public static boolean secureSend(byte[] data,DataOutputStream ds,byte[] encKey, String authKey) {
         try{
             System.out.println("[SECURE SEND - "+Thread.currentThread().getName()+"]");
