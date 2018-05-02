@@ -13,9 +13,9 @@ import java.util.Random;
 public class SecureEndpoint {
     private final static String AUTH_ALG = "HmacSHA256";
     private int sequenceCounter = 0;
-    private static int AUTH_MAC_SIZE = 256;
+    private static int AUTH_MAC_SIZE = 256/8;
     private static long TIME_TH = 1000;
-    public static boolean secureSend(byte[] data,DataInputStream di,DataOutputStream ds,byte[] encKey, String authKey) {
+    public static boolean secureSend(byte[] data,DataOutputStream ds,byte[] encKey, String authKey) {
         try{
             System.out.println("[SECURE SEND - "+Thread.currentThread().getName()+"]");
             byte[] timestampedMessage = MessageBuilder.insertTimestamp(data);
@@ -34,7 +34,7 @@ public class SecureEndpoint {
         }              
     }
     
-    public static byte[] secureReceive(DataInputStream di,DataOutputStream ds,byte[] encKey, String authKey) {
+    public static byte[] secureReceive(DataInputStream di,byte[] encKey, String authKey) {
         try {
             int len = di.readInt();
             if(len > 0) {
@@ -53,6 +53,7 @@ public class SecureEndpoint {
             }
         } catch(Exception e) {
             System.err.println("[RECEIVE- "+Thread.currentThread().getName()+"]: "+e.getMessage());
+            e.printStackTrace();
             System.exit(-1);            
             return null;
         }        
