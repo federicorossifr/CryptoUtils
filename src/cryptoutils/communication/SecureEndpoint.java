@@ -15,19 +15,6 @@ public class SecureEndpoint {
     private int sequenceCounter = 0;
     private static int AUTH_MAC_SIZE = 256;
     private static long TIME_TH = 1000;
-    /*
-    public SecureEndpoint(String encKey,String authKey,String authAlg) {
-        this.authKey = authKey;
-        this.authAlg = authAlg;
-        this.encKey = encKey.getBytes();
-        try {
-            authMACSize = (Mac.getInstance(authAlg)).getMacLength();
-        } catch (Exception ex) {
-            System.err.println("[CONSTRUCTOR - "+Thread.currentThread().getName()+"]: "+ex.getMessage());
-            System.exit(-1);
-        }
-    }
-    */
     public static boolean secureSend(byte[] data,DataInputStream di,DataOutputStream ds,byte[] encKey, String authKey) {
         try{
             System.out.println("[SECURE SEND - "+Thread.currentThread().getName()+"]");
@@ -49,8 +36,6 @@ public class SecureEndpoint {
     
     public static byte[] secureReceive(DataInputStream di,DataOutputStream ds,byte[] encKey, String authKey) {
         try {
-            int nonce = (new SecureRandom()).nextInt();
-            ds.writeInt(nonce); ds.flush();
             int len = di.readInt();
             if(len > 0) {
                 byte[] buffer = new byte[len];
