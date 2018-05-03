@@ -17,9 +17,8 @@ public class SecureEndpoint {
             byte[] timestampedMessage = MessageBuilder.insertTimestamp(data);
             byte[] hashedMessage = MessageBuilder.insertMAC(timestampedMessage,AUTH_ALG,authKey);
             byte[] encryptedMessage = CryptoManager.encryptCBC(hashedMessage, encKey, new Random().nextInt()); 
-            System.out.println("[SEND - "+Thread.currentThread().getName()+"]: SENDING ENCRYPTED MESSAGE");                        
             ds.writeObject(encryptedMessage);
-            ds.flush();
+            System.out.println("[SEND-"+Thread.currentThread().getName()+"]: SENT ENCRYPTED MESSAGE");                        
             return true;
         } catch(Exception e) {
             e.printStackTrace();
