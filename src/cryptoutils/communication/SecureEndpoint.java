@@ -22,8 +22,7 @@ public class SecureEndpoint {
             ds.flush();
             return true;
         } catch(Exception e) {
-            System.err.println("[SEND - "+Thread.currentThread().getName()+"]: "+e.getMessage());
-            System.exit(-1);            
+            e.printStackTrace();
             return false;
         }              
     }
@@ -39,9 +38,7 @@ public class SecureEndpoint {
             boolean verified = (HashManager.compareMAC(timestampedMessage, messageHash, authKey, AUTH_ALG) && verifyTimestamp(timeStamp));    
             return (verified)?plainText:null;
         } catch(Exception e) {
-            System.err.println("[RECEIVE- "+Thread.currentThread().getName()+"]: "+e.getMessage());
             e.printStackTrace();
-            System.exit(-1);            
             return null;
         }        
     }

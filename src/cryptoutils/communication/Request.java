@@ -181,6 +181,7 @@ public class Request {
      */
     public byte[] getEncrypted(PublicKey recipientPublicKey) throws CertificateEncodingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         if(signature == null || challengeNonce == null) return null;
+        System.out.println("SCRET KEY LENGTH " + secretKey.length);
         secretKey = CryptoManager.encryptRSA(secretKey, recipientPublicKey);
         byte[] encoded = getEncoded();
         return encoded;
