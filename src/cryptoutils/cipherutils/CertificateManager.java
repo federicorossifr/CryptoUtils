@@ -55,5 +55,14 @@ public class CertificateManager {
             return false;
         }
     }
-            
+    
+    public static String getCertificateSubjectName(X509Certificate cert) {
+        String info = cert.getSubjectDN().toString();
+        String[] infos = info.split(",");
+        if(infos == null || infos.length < 1) return null;
+        String[] nameStruct = infos[0].split("=");
+        if(nameStruct.length < 2) return null; 
+        String name = nameStruct[1];
+        return name;
+    }
 }

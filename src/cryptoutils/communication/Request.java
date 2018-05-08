@@ -255,4 +255,18 @@ public class Request {
     public int getChallengeNonce() {
         return MessageBuilder.toInt(challengeNonce);
     }
+    
+    public boolean verify(Certificate authority,String expectedSubject) {
+        boolean verified = true;
+        verified&=verifySignature();
+        verified&=verifyCertificate(authority);
+        String subject = CertificateManager.getCertificateSubjectName((X509Certificate)certificate);
+        if(subject == null) return false;
+        if(expectedSubject != null) {
+            verified&=(expectedSubject.equals(subject));
+            verified&=(issuer.equals(expectedSubject));
+        }
+        verified&=(subject.equals(issuer));
+        return verified;
+    }
 }
