@@ -258,13 +258,13 @@ public class Request {
     
     public boolean verify(Certificate authority,String expectedSubject) {
         boolean verified = true;
-        verified&=verifySignature();
-        verified&=verifyCertificate(authority);
+        verified&=(verifySignature() && verifyCertificate(authority));
+        //verified&=verifyCertificate(authority);
         String subject = CertificateManager.getCertificateSubjectName((X509Certificate)certificate);
         if(subject == null) return false;
         if(expectedSubject != null) {
-            verified&=(expectedSubject.equals(subject));
-            verified&=(issuer.equals(expectedSubject));
+            verified&=(expectedSubject.equals(subject) && issuer.equals(expectedSubject));
+           // verified&=(issuer.equals(expectedSubject));
         }
         verified&=(subject.equals(issuer));
         return verified;

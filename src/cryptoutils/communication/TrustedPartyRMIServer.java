@@ -2,6 +2,9 @@
 package cryptoutils.communication;
 
 import cryptoutils.cipherutils.CertificateManager;
+import cryptoutils.cipherutils.CryptoManager;
+import cryptoutils.cipherutils.SignatureManager;
+import cryptoutils.messagebuilder.MessageBuilder;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
@@ -14,11 +17,14 @@ import java.security.cert.X509Certificate;
 import java.util.*;
 import cryptoutils.openssl.OpenSSLCliBindings;
 import java.rmi.server.RemoteServer;
+import java.security.PrivateKey;
+import java.security.cert.CertificateEncodingException;
 
 public class TrustedPartyRMIServer implements TrustedPartyInterface{
-    private Map<String,Certificate> certStore;
+    private ArrayList<Certificate> certStore;
     private final String authorityCertificateFile;
     private final String authorityKeyFile;
+    private PrivateKey authKey = null;
     
     /**
      * p
@@ -26,47 +32,36 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
      * @param authorityKeyFile the filename of the authority private key
      */
     public TrustedPartyRMIServer(String authorityCertificateFile,String authorityKeyFile) {
-        certStore = loadMap();
+        certStore = loadArray();
         this.authorityCertificateFile= authorityCertificateFile;
         this.authorityKeyFile = authorityKeyFile;
-    }
-    
-    /**
-     * Retrieve a Certificate object from the internal storage for the user represented by String user
-     * @param user  the requested Certificate's owner
-     * @return  the Certificate object (null if  user is not present)
-     * @throws RemoteException 
-     */
-    @Override
-    public Certificate getUserCertificate(String user) throws RemoteException {
-        try {
-            System.out.println(RemoteServer.getClientHost());
-        } catch(Exception e) {
-            e.printStackTrace();
-        }     
-        Certificate cert = certStore.get(user);
-        return cert;
+        try{
+            this.authKey = CryptoManager.readRSAPrivateKeyFromPEMFile(authorityKeyFile);
+        }catch(Exception ex){
+            ex.printStackTrace();
+            System.exit(-1);
+        }
     }
     
     /**
      * Load the certificate store from file. If file is not found, a new store is created
      * @return the TreeMap representing the certificate store
      */
-    private TreeMap<String,Certificate> loadMap()  {
+    private ArrayList<Certificate> loadArray()  {
         try(FileInputStream fis = new FileInputStream("cstore.bin");
             ObjectInputStream bis = new ObjectInputStream(fis);) {
-            TreeMap<String,Certificate> map = (TreeMap<String,Certificate>) bis.readObject();
-            return map;
+            ArrayList<Certificate> array = (ArrayList<Certificate>) bis.readObject();
+            return array;
         } catch(Exception e) {
             e.printStackTrace();
-            return new TreeMap<>();
+            return new ArrayList<>();
         }
     }
     
     /**
      * Save the current certificate store into a binary file.
      */
-    private void backupMap() {
+    private void backupArray() {
         try(FileOutputStream fos = new FileOutputStream("cstore.bin");
             ObjectOutputStream bos = new ObjectOutputStream(fos);)
         {
@@ -84,7 +79,7 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
      * @throws RemoteException 
      */
     @Override
-    public Certificate register(byte[] csrContent) throws RemoteException {
+    public Certificate sign(byte[] csrContent) throws RemoteException {
         String tmpName = Long.toString((java.lang.System.currentTimeMillis()));
         try {
             System.out.println(RemoteServer.getClientHost());
@@ -96,21 +91,38 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
             String cName = xcert.getSubjectDN().getName();
             String commonName = cName.split(",")[0].split("=")[1];
             System.out.println("Certificate done for "+commonName);
-            Certificate curr = certStore.putIfAbsent(commonName, c);
-            backupMap();
             Files.deleteIfExists(Paths.get(tmpName));
             Files.deleteIfExists(Paths.get(tmpName+OpenSSLCliBindings.DEF_CERT_EXTENSION));
-            if(curr == null)
-                return c;
-            else {
-                System.out.println("Certificate for "+commonName+"already exists...");
-                Files.deleteIfExists(Paths.get(tmpName+OpenSSLCliBindings.DEF_CERT_EXTENSION));
-                return null;
-            }
+            return c;
         } catch(Exception e) {
             e.printStackTrace();
             throw new RemoteException();
         }
+    }
+
+    @Override
+    public byte[] getCRL(Certificate cert) throws RemoteException {
+        byte[] crl = {};
+        for (Certificate c: certStore) {
+            try{
+            crl = MessageBuilder.concatBytes(crl,c.getEncoded());
+            }catch(CertificateEncodingException ce){
+                continue;
+            }
+        }
+        try{
+            byte[] sign = SignatureManager.sign(crl,"SHA256withRSA", authKey);
+            return MessageBuilder.concatBytes(crl,sign);
+        }catch(Exception ex){
+            return null;
+        }
+    }
+
+    
+    private void addToCRL(Certificate cert) throws RemoteException {
+       if(cert==null)
+           return;
+       certStore.add(cert);
     }
     
 }
