@@ -15,11 +15,9 @@ public interface TrustedPartyInterface extends Remote {
      */
     Certificate sign(byte[] csrContent) throws RemoteException;
     /**
-     * 
-     * @param cert
      * @return
      * @throws RemoteException 
-     */
-    byte[] getCRL( Certificate cert) throws RemoteException;
+     */ 
+    byte[] getCRL() throws RemoteException;  
 
 }

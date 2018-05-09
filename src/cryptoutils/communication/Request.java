@@ -269,4 +269,7 @@ public class Request {
         verified&=(subject.equals(issuer));
         return verified;
     }
+    public Certificate getCertificate(){
+        return certificate;
+    }
 }

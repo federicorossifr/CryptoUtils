@@ -101,7 +101,7 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
     }
 
     @Override
-    public byte[] getCRL(Certificate cert) throws RemoteException {
+    public byte[] getCRL() throws RemoteException {//TODO encode
         byte[] crl = {};
         for (Certificate c: certStore) {
             try{
