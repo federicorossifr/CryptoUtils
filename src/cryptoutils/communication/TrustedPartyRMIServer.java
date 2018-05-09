@@ -4,6 +4,7 @@ package cryptoutils.communication;
 import cryptoutils.cipherutils.CertificateManager;
 import cryptoutils.cipherutils.CryptoManager;
 import cryptoutils.cipherutils.SignatureManager;
+import cryptoutils.hashutils.HashManager;
 import cryptoutils.messagebuilder.MessageBuilder;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -114,16 +115,19 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
             }catch(CertificateEncodingException ce){}
         }
         try{
-            crl = MessageBuilder.concatBytes(nonce,crl);
-            byte[] sign = SignatureManager.sign(crl,"SHA256withRSA", authKey);
-            return MessageBuilder.concatBytes(crl,sign);
+            byte[] msg = MessageBuilder.concatBytes(nonce,crl);
+            byte[] sign = SignatureManager.sign(msg,"SHA256withRSA", authKey);
+            System.out.println(HashManager.toHexString(sign));            
+            byte[] signLength = MessageBuilder.toByteArray(sign.length);
+            byte[] ret = MessageBuilder.concatBytes(signLength,sign,msg);
+            return ret;
         }catch(Exception ex){
             return null;
         }
     }
 
     
-    private void addToCRL(Certificate cert) throws RemoteException {
+    public void addToCRL(Certificate cert) throws RemoteException {
        if(cert==null)
            return;
        certStore.add(cert);
