@@ -4,6 +4,7 @@ import cryptoutils.cipherutils.CryptoManager;
 import cryptoutils.messagebuilder.MessageBuilder;
 import cryptoutils.hashutils.HashManager;
 import java.io.*;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Random;
 

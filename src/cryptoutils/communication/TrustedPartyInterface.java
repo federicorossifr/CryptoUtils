@@ -18,6 +18,6 @@ public interface TrustedPartyInterface extends Remote {
      * @return
      * @throws RemoteException 
      */ 
-    byte[] getCRL() throws RemoteException;  
+    byte[] getCRL(byte[] nonce) throws RemoteException;  
 
 }
