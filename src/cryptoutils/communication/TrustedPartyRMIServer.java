@@ -102,13 +102,16 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
 
     @Override
     public byte[] getCRL() throws RemoteException {//TODO encode
-        byte[] crl = {};
+        byte[] crl = null;
         for (Certificate c: certStore) {
             try{
-            crl = MessageBuilder.concatBytes(crl,c.getEncoded());
-            }catch(CertificateEncodingException ce){
-                continue;
-            }
+                byte[] certData = c.getEncoded();
+                byte[] certSize = MessageBuilder.toByteArray(certData.length);
+                if(crl == null)
+                    crl = MessageBuilder.concatBytes(certSize,certData);
+                else 
+                    crl = MessageBuilder.concatBytes(crl,certSize,certData);
+            }catch(CertificateEncodingException ce){}
         }
         try{
             byte[] sign = SignatureManager.sign(crl,"SHA256withRSA", authKey);

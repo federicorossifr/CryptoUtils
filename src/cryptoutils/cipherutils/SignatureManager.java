@@ -32,12 +32,9 @@ public class SignatureManager {
      * @param sign
      * @param alg the algorithm to be used
      * @param key the PublicKey object to be used
-     * @return  boolean object stating whether the message is correctly signed or not
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
-     * @throws SignatureException 
+     * @return  boolean object stating whether the message is correctly signed or not 
      */
-    public static boolean verify(byte[] data,byte[] sign,String alg,PublicKey key) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public static boolean verify(byte[] data,byte[] sign,String alg,PublicKey key) {
         try {
             Signature sig = Signature.getInstance(alg);
             sig.initVerify(key);
