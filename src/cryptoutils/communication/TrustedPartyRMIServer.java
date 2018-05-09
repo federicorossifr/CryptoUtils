@@ -54,7 +54,7 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
             ArrayList<Certificate> array = (ArrayList<Certificate>) bis.readObject();
             return array;
         } catch(Exception e) {
-            e.printStackTrace();
+            System.out.println("NO CRL STORED");
             return new ArrayList<>();
         }
     }
@@ -63,6 +63,7 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
      * Save the current certificate store into a binary file.
      */
     private void backupArray() {
+        System.out.println("WRITING TO FILE");
         try(FileOutputStream fos = new FileOutputStream("cstore.bin");
             ObjectOutputStream bos = new ObjectOutputStream(fos);)
         {
@@ -130,6 +131,7 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
     public void addToCRL(Certificate cert) throws RemoteException {
        if(cert==null)
            return;
+       backupArray();
        certStore.add(cert);
     }
     
