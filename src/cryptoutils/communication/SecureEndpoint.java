@@ -22,7 +22,7 @@ public class SecureEndpoint {
             System.out.println("[SEND-"+Thread.currentThread().getName()+"]: SENT ENCRYPTED MESSAGE");                        
             return true;
         } catch(Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             return false;
         }              
     }
@@ -38,7 +38,7 @@ public class SecureEndpoint {
             boolean verified = (HashManager.compareMAC(timestampedMessage, messageHash, authKey, AUTH_ALG) && verifyTimestamp(timeStamp));    
             return (verified)?plainText:null;
         } catch(Exception e) {
-            e.printStackTrace();
+           // e.printStackTrace();
             return null;
         }        
     }
