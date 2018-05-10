@@ -17,6 +17,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -29,11 +30,12 @@ import javax.crypto.NoSuchPaddingException;
  * Signature is the digital signature of the request to prevent tampering
  */
 public class Request {
+    private final static long SLEEK_TH = 1000;
     private final String issuer;
     private final String recipient;
     private final Certificate certificate;
     private byte[] secretKey;
-    private byte[] challengeNonce = null;
+    private byte[] timestamp = null;
     private byte[] signature = null;
     private final static int NUM_FIELDS = 6;
     
@@ -94,6 +96,7 @@ public class Request {
         this.recipient = recipient;
         this.issuer = issuer;
         this.secretKey = secretKey;
+        this.timestamp = MessageBuilder.toByteArray(Instant.now().toEpochMilli());
     }
     
     /**
@@ -109,7 +112,7 @@ public class Request {
         this.certificate = certificate;
         this.recipient = recipient;
         this.issuer = issuer;
-        this.challengeNonce = challengeNonce;
+        this.timestamp = challengeNonce;
         this.signature = signature;
         this.secretKey = secretKey;
     }    
@@ -123,7 +126,7 @@ public class Request {
      * @throws SignatureException 
      */
     public void sign(PrivateKey key) throws CertificateEncodingException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        byte[] data = MessageBuilder.concatBytes(issuer.getBytes(),recipient.getBytes(),certificate.getEncoded(),secretKey,challengeNonce);
+        byte[] data = MessageBuilder.concatBytes(issuer.getBytes(),recipient.getBytes(),certificate.getEncoded(),secretKey,timestamp);
         signature = SignatureManager.sign(data, "SHA256withRSA", key);
     }
     
@@ -133,7 +136,7 @@ public class Request {
      */
     public boolean verifySignature() {
         try {
-            byte[] data = MessageBuilder.concatBytes(issuer.getBytes(),recipient.getBytes(),certificate.getEncoded(),secretKey,challengeNonce);
+            byte[] data = MessageBuilder.concatBytes(issuer.getBytes(),recipient.getBytes(),certificate.getEncoded(),secretKey,timestamp);
             return SignatureManager.verify(data, signature, "SHA256withRSA",certificate);
         } catch(Exception e) {
             return false;
@@ -148,8 +151,8 @@ public class Request {
         SecureRandom sr = new SecureRandom();
         byte[] bytes = new byte[4];
         sr.nextBytes(bytes);
-        challengeNonce = bytes;
-        return MessageBuilder.toInt(challengeNonce);
+        timestamp = bytes;
+        return MessageBuilder.toInt(timestamp);
     }
     
     /**
@@ -162,7 +165,7 @@ public class Request {
         byte[] rB = recipient.getBytes(); byte[] rL = MessageBuilder.toByteArray(rB.length);
         byte[] skB = secretKey; byte[] skL = MessageBuilder.toByteArray(secretKey.length);
         byte[] cB = certificate.getEncoded(); byte[] cL = MessageBuilder.toByteArray(cB.length);
-        byte[] nB = challengeNonce; byte[] nL = MessageBuilder.toByteArray(nB.length);
+        byte[] nB = timestamp; byte[] nL = MessageBuilder.toByteArray(nB.length);
         byte[] sB = signature; byte[] sL = MessageBuilder.toByteArray(sB.length); 
         byte[] out = MessageBuilder.concatBytes(iL,iB,rL,rB,cL,cB,skL,skB,nL,nB,sL,sB);
         return out;
@@ -180,7 +183,7 @@ public class Request {
      * @throws BadPaddingException 
      */
     public byte[] getEncrypted(PublicKey recipientPublicKey) throws CertificateEncodingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        if(signature == null || challengeNonce == null) return null;
+        if(signature == null || timestamp == null) return null;
         System.out.println("SCRET KEY LENGTH " + secretKey.length);
         secretKey = CryptoManager.encryptRSA(secretKey, recipientPublicKey);
         byte[] encoded = getEncoded();
@@ -252,8 +255,8 @@ public class Request {
      * Get the challenge nonce
      * @return 
      */
-    public int getChallengeNonce() {
-        return MessageBuilder.toInt(challengeNonce);
+    public Instant getTimestamp() {
+        return MessageBuilder.getTimestamp(timestamp, 0);
     }
     
     public boolean verify(Certificate authority,String expectedSubject) {
@@ -264,6 +267,8 @@ public class Request {
         if(expectedSubject != null)
             verified&=(expectedSubject.equals(subject) && issuer.equals(expectedSubject));
         verified&=(subject.equals(issuer));
+        Instant now = Instant.now();
+        verified&=!(getTimestamp().isAfter(now.plusMillis(SLEEK_TH))||getTimestamp().isBefore(now.minusMillis(SLEEK_TH)));
         return verified;
     }
     public Certificate getCertificate(){
