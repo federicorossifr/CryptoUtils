@@ -17,25 +17,30 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import cryptoutils.openssl.OpenSSLCliBindings;
+import java.io.IOException;
 import java.rmi.server.RemoteServer;
 import java.security.PrivateKey;
 import java.security.cert.CertificateEncodingException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TrustedPartyRMIServer implements TrustedPartyInterface{
     private ArrayList<Certificate> certStore;
     private final String authorityCertificateFile;
     private final String authorityKeyFile;
     private PrivateKey authKey = null;
+    private String crlName = null;
     
     /**
      * p
      * @param authorityCertificateFile the filename of the authority certificate 
      * @param authorityKeyFile the filename of the authority private key
      */
-    public TrustedPartyRMIServer(String authorityCertificateFile,String authorityKeyFile) {
+    public TrustedPartyRMIServer(String authorityCertificateFile,String authorityKeyFile,String crlName) {
         certStore = loadArray();
         this.authorityCertificateFile= authorityCertificateFile;
         this.authorityKeyFile = authorityKeyFile;
+        this.crlName = crlName;
         try{
             this.authKey = CryptoManager.readRSAPrivateKeyFromPEMFile(authorityKeyFile);
         }catch(Exception ex){
@@ -103,28 +108,37 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
     }
 
     @Override
-    public byte[] getCRL(byte[] nonce) throws RemoteException {//TODO encode
-        byte[] crl = null;
+    public byte[] getCRL(byte[] nonce) throws RemoteException {try {
+        //TODO encode
+        /*byte[] crl = null;
         for (Certificate c: certStore) {
-            try{
-                byte[] certData = c.getEncoded();
-                byte[] certSize = MessageBuilder.toByteArray(certData.length);
-                if(crl == null)
-                    crl = MessageBuilder.concatBytes(certSize,certData);
-                else 
-                    crl = MessageBuilder.concatBytes(crl,certSize,certData);
-            }catch(CertificateEncodingException ce){}
+        try{
+        byte[] certData = c.getEncoded();
+        byte[] certSize = MessageBuilder.toByteArray(certData.length);
+        if(crl == null)
+        crl = MessageBuilder.concatBytes(certSize,certData);
+        else
+        crl = MessageBuilder.concatBytes(crl,certSize,certData);
+        }catch(CertificateEncodingException ce){}
         }
         try{
-            byte[] msg = MessageBuilder.concatBytes(nonce,crl);
-            byte[] sign = SignatureManager.sign(msg,"SHA256withRSA", authKey);
-            System.out.println(HashManager.toHexString(sign));            
-            byte[] signLength = MessageBuilder.toByteArray(sign.length);
-            byte[] ret = MessageBuilder.concatBytes(signLength,sign,msg);
-            return ret;
+        byte[] msg = MessageBuilder.concatBytes(nonce,crl);
+        byte[] sign = SignatureManager.sign(msg,"SHA256withRSA", authKey);
+        System.out.println(HashManager.toHexString(sign));
+        byte[] signLength = MessageBuilder.toByteArray(sign.length);
+        byte[] ret = MessageBuilder.concatBytes(signLength,sign,msg);
+        return ret;
         }catch(Exception ex){
-            return null;
-        }
+        return null;
+        }*/
+        byte[] crlBytes = Files.readAllBytes(Paths.get(crlName));
+        System.out.println(new String(crlBytes));
+        byte[] noncedCrlBytes = MessageBuilder.concatBytes(crlBytes,nonce);
+        byte[] signatureBytes = SignatureManager.sign(noncedCrlBytes,"SHA256withRSA", authKey);
+        byte[] signatureLength = MessageBuilder.toByteArray(signatureBytes.length);
+        byte[] returnMessage = MessageBuilder.concatBytes(signatureLength,signatureBytes,noncedCrlBytes);
+        return returnMessage;
+        } catch (Exception ex) {ex.printStackTrace(); return null;}
     }
 
     
