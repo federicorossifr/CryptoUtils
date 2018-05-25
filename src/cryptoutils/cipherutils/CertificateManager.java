@@ -55,6 +55,11 @@ public class CertificateManager {
             return false;
         }
     }
+    /**
+     * 
+     * @param cert certificate of which we want the subject
+     * @return String identifying the subject 
+     */
     
     public static String getCertificateSubjectName(X509Certificate cert) {
         String info = cert.getSubjectDN().toString();

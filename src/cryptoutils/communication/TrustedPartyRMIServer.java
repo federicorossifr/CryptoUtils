@@ -4,7 +4,6 @@ package cryptoutils.communication;
 import cryptoutils.cipherutils.CertificateManager;
 import cryptoutils.cipherutils.CryptoManager;
 import cryptoutils.cipherutils.SignatureManager;
-import cryptoutils.hashutils.HashManager;
 import cryptoutils.messagebuilder.MessageBuilder;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -17,12 +16,8 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import cryptoutils.openssl.OpenSSLCliBindings;
-import java.io.IOException;
 import java.rmi.server.RemoteServer;
 import java.security.PrivateKey;
-import java.security.cert.CertificateEncodingException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class TrustedPartyRMIServer implements TrustedPartyInterface{
     private ArrayList<Certificate> certStore;
@@ -106,7 +101,12 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
             throw new RemoteException();
         }
     }
-
+    /**
+     * 
+     * @param nonce
+     * @return byte[] representing the CRL list
+     * @throws RemoteException 
+     */
     @Override
     public byte[] getCRL(byte[] nonce) throws RemoteException {try {
         //TODO encode
@@ -140,8 +140,12 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
         return returnMessage;
         } catch (Exception ex) {ex.printStackTrace(); return null;}
     }
-
     
+    /**
+     * Adds to CRL a particular certificate
+     * @param cert  certificate to be added
+     * @throws RemoteException 
+     */
     public void addToCRL(Certificate cert) throws RemoteException {
        if(cert==null)
            return;
