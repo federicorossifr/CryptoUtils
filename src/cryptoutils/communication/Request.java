@@ -30,7 +30,7 @@ import javax.crypto.NoSuchPaddingException;
  * Signature is the digital signature of the request to prevent tampering
  */
 public class Request {
-    private final static long SLEEK_TH = 1000;
+    private final static long SLEEK_TH = 60*1000;
     private final String issuer;
     private final String recipient;
     private final Certificate certificate;
@@ -260,15 +260,23 @@ public class Request {
     }
     
     public boolean verify(Certificate authority,String expectedSubject) {
+        System.out.println("=======");
         boolean verified = true;
         verified&=(verifySignature() && verifyCertificate(authority));
+        System.out.println(verified);
         String subject = CertificateManager.getCertificateSubjectName((X509Certificate)certificate);
         if(subject == null) return false;
         if(expectedSubject != null)
             verified&=(expectedSubject.equals(subject) && issuer.equals(expectedSubject));
+        System.out.println(verified);        
         verified&=(subject.equals(issuer));
+        System.out.println(verified);        
         Instant now = Instant.now();
+        System.out.println(now.toEpochMilli());
+        System.out.println(getTimestamp().toEpochMilli());
         verified&=!(getTimestamp().isAfter(now.plusMillis(SLEEK_TH))||getTimestamp().isBefore(now.minusMillis(SLEEK_TH)));
+        System.out.println(verified);  
+        System.out.println("=======");        
         return verified;
     }
     public Certificate getCertificate(){

@@ -11,7 +11,7 @@ import java.util.Random;
 public class SecureEndpoint {
     public final static String AUTH_ALG = "HmacSHA256";
     private static final int AUTH_MAC_SIZE = 256/8;
-    private static final long TIME_TH = 1000;
+    private static final long TIME_TH = 60*1000;
     public static boolean secureSend(byte[] data,ObjectOutputStream ds,byte[] encKey, byte[] authKey) {
         try{
             System.out.println("[SECURE SEND - "+Thread.currentThread().getName()+"]");
