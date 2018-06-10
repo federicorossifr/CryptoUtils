@@ -1,10 +1,7 @@
 package cryptoutils.openssl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
+import java.nio.file.*;
 
 /**
  * This class provides methods to invoke openssl library commands if globally available on the running machine.
