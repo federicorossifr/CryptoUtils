@@ -1,22 +1,14 @@
 
 package cryptoutils.communication;
 
-import cryptoutils.cipherutils.CertificateManager;
 import cryptoutils.cipherutils.CryptoManager;
 import cryptoutils.cipherutils.SignatureManager;
 import cryptoutils.messagebuilder.MessageBuilder;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
 import java.util.*;
-import cryptoutils.openssl.OpenSSLCliBindings;
-import java.rmi.server.RemoteServer;
 import java.security.PrivateKey;
 
 public class TrustedPartyRMIServer implements TrustedPartyInterface{
@@ -32,7 +24,6 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
      * @param authorityKeyFile the filename of the authority private key
      */
     public TrustedPartyRMIServer(String authorityCertificateFile,String authorityKeyFile,String crlName) {
-        certStore = loadArray();
         this.authorityCertificateFile= authorityCertificateFile;
         this.authorityKeyFile = authorityKeyFile;
         this.crlName = crlName;
@@ -43,64 +34,6 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
             System.exit(-1);
         }
     }
-    
-    /**
-     * Load the certificate store from file. If file is not found, a new store is created
-     * @return the TreeMap representing the certificate store
-     */
-    private ArrayList<Certificate> loadArray()  {
-        try(FileInputStream fis = new FileInputStream("cstore.bin");
-            ObjectInputStream bis = new ObjectInputStream(fis);) {
-            ArrayList<Certificate> array = (ArrayList<Certificate>) bis.readObject();
-            return array;
-        } catch(Exception e) {
-            System.out.println("NO CRL STORED");
-            return new ArrayList<>();
-        }
-    }
-    
-    /**
-     * Save the current certificate store into a binary file.
-     */
-    private void backupArray() {
-        System.out.println("WRITING TO FILE");
-        try(FileOutputStream fos = new FileOutputStream("cstore.bin");
-            ObjectOutputStream bos = new ObjectOutputStream(fos);)
-        {
-            bos.writeObject(certStore);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Register an user into the certificate store by signing its certificate signing request represented
-     * by byte[] object
-     * @param csrContent the byte[] array containing the csr request
-     * @return  the signed Certificate object
-     * @throws RemoteException 
-     */
-    @Override
-    public Certificate sign(byte[] csrContent) throws RemoteException {
-        String tmpName = Long.toString((java.lang.System.currentTimeMillis()));
-        try {
-            System.out.println(RemoteServer.getClientHost());
-            Files.write(Paths.get(tmpName), csrContent);
-            boolean result = OpenSSLCliBindings.signRequest(tmpName, authorityCertificateFile, authorityKeyFile, tmpName);
-            if(!result) return null;
-            Certificate c = CertificateManager.readCertFromFile(tmpName+OpenSSLCliBindings.DEF_CERT_EXTENSION);
-            X509Certificate xcert = (X509Certificate)c;
-            String cName = xcert.getSubjectDN().getName();
-            String commonName = cName.split(",")[0].split("=")[1];
-            System.out.println("Certificate done for "+commonName);
-            Files.deleteIfExists(Paths.get(tmpName));
-            Files.deleteIfExists(Paths.get(tmpName+OpenSSLCliBindings.DEF_CERT_EXTENSION));
-            return c;
-        } catch(Exception e) {
-            e.printStackTrace();
-            throw new RemoteException();
-        }
-    }
     /**
      * 
      * @param nonce
@@ -109,28 +42,6 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
      */
     @Override
     public byte[] getCRL(byte[] nonce) throws RemoteException {try {
-        //TODO encode
-        /*byte[] crl = null;
-        for (Certificate c: certStore) {
-        try{
-        byte[] certData = c.getEncoded();
-        byte[] certSize = MessageBuilder.toByteArray(certData.length);
-        if(crl == null)
-        crl = MessageBuilder.concatBytes(certSize,certData);
-        else
-        crl = MessageBuilder.concatBytes(crl,certSize,certData);
-        }catch(CertificateEncodingException ce){}
-        }
-        try{
-        byte[] msg = MessageBuilder.concatBytes(nonce,crl);
-        byte[] sign = SignatureManager.sign(msg,"SHA256withRSA", authKey);
-        System.out.println(HashManager.toHexString(sign));
-        byte[] signLength = MessageBuilder.toByteArray(sign.length);
-        byte[] ret = MessageBuilder.concatBytes(signLength,sign,msg);
-        return ret;
-        }catch(Exception ex){
-        return null;
-        }*/
         byte[] crlBytes = Files.readAllBytes(Paths.get(crlName));
         System.out.println(new String(crlBytes));
         byte[] noncedCrlBytes = MessageBuilder.concatBytes(crlBytes,nonce);
@@ -139,18 +50,6 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
         byte[] returnMessage = MessageBuilder.concatBytes(signatureLength,signatureBytes,noncedCrlBytes);
         return returnMessage;
         } catch (Exception ex) {ex.printStackTrace(); return null;}
-    }
-    
-    /**
-     * Adds to CRL a particular certificate
-     * @param cert  certificate to be added
-     * @throws RemoteException 
-     */
-    public void addToCRL(Certificate cert) throws RemoteException {
-       if(cert==null)
-           return;
-       backupArray();
-       certStore.add(cert);
     }
     
 }
