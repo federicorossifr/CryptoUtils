@@ -17,7 +17,7 @@ import javax.crypto.*;
  * This class represents a handshake Request from the issuer to the recipient. 
  * Certificate is the issuer certificate to prove its identity (signed by ttp)
  * SecretKey is the shared secret key (encrypted by means of recipient public key)
- * Challenge nonce is used to prevent reply attacks (encrypted by means of recipient public key)
+ * Timestamp is used to prevent reply attacks (encrypted by means of recipient public key)
  * Signature is the digital signature of the request to prevent tampering
  */
 public class Request {
@@ -134,17 +134,6 @@ public class Request {
         }
     }
     
-    /**
-     * Computes a secure random challenge and returns its value
-     * @return 
-     */
-    public int setRandomChallenge() {
-        SecureRandom sr = new SecureRandom();
-        byte[] bytes = new byte[4];
-        sr.nextBytes(bytes);
-        timestamp = bytes;
-        return MessageBuilder.toInt(timestamp);
-    }
     
     /**
      * Get the encoded bytes of the certificate. The byte[] representation has the format < field_length,field_content >
@@ -249,25 +238,22 @@ public class Request {
     public Instant getTimestamp() {
         return MessageBuilder.getTimestamp(timestamp, 0);
     }
-    
+    /**
+     * Verify the freshness and message origin authentication of the request
+     * @param authority         Certificate of the CA to verify issuer certificate
+     * @param expectedSubject   Nickname expected to be contained in the certificate SN
+     * @return 
+     */
     public boolean verify(Certificate authority,String expectedSubject) {
-        System.out.println("=======");
         boolean verified = true;
         verified&=(verifySignature() && verifyCertificate(authority));
-        System.out.println(verified);
         String subject = CertificateManager.getCertificateSubjectName((X509Certificate)certificate);
         if(subject == null) return false;
         if(expectedSubject != null)
             verified&=(expectedSubject.equals(subject) && issuer.equals(expectedSubject));
-        System.out.println(verified);        
         verified&=(subject.equals(issuer));
-        System.out.println(verified);        
         Instant now = Instant.now();
-        System.out.println(now.toEpochMilli());
-        System.out.println(getTimestamp().toEpochMilli());
         verified&=!(getTimestamp().isAfter(now.plusMillis(SLEEK_TH))||getTimestamp().isBefore(now.minusMillis(SLEEK_TH)));
-        System.out.println(verified);  
-        System.out.println("=======");        
         return verified;
     }
     public Certificate getCertificate(){

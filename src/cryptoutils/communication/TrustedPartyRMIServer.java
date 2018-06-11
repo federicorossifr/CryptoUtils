@@ -42,7 +42,6 @@ public class TrustedPartyRMIServer implements TrustedPartyInterface{
     @Override
     public byte[] getCRL(byte[] nonce) throws RemoteException {try {
         byte[] crlBytes = Files.readAllBytes(Paths.get(crlName));
-        System.out.println(new String(crlBytes));
         byte[] noncedCrlBytes = MessageBuilder.concatBytes(crlBytes,nonce);
         byte[] signatureBytes = SignatureManager.sign(noncedCrlBytes,"SHA256withRSA", authKey);
         byte[] signatureLength = MessageBuilder.toByteArray(signatureBytes.length);
